@@ -12,6 +12,6 @@ The One Smart Control Application is written in C++ using the Qt-Creator IDE and
 
 [**>>>Development branch (Qt-Creator)<<<**]()
 
-For Pre-Build files check out the build branch for Windows 10 to get the raw build files. 
+If you want to use the raw build files you can get these files at the build branch of this repository 
 
 [**>>>Pre-Build files fo Windows 10<<<**]()
