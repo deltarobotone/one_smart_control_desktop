@@ -6,7 +6,7 @@ If you want to get the One Smart Control Desktop Software the recommended way to
 
 Check out the wiki page of this repository for some introduction to the One Smart Control Desktop Application
 
-[**>>>One Smart Control Wiki<<<**]()
+[**>>>One Smart Control Wiki<<<**](https://github.com/deltarobotone/one_smart_control_desktop/wiki)
 
 The One Smart Control Application is written in C++ using the Qt-Creator IDE and the Qt-Framework. Check out the development branch of this repository and have a look at the sourcecode.
 
