@@ -15,3 +15,7 @@ The One Smart Control Application is written in C++ using the Qt-Creator IDE and
 If you want to use the raw build files you can get these files at the build branch of this repository 
 
 [**>>>Pre-Build files fo Windows 10<<<**]()
+
+[<img src="https://raw.githubusercontent.com/deltarobotone/image_database/master/smart_control/smart_control%20(1).png" width="1000">](https://raw.githubusercontent.com/deltarobotone/image_database/master/smart_control/smart_control%20(1).png)
+
+[<img src="https://raw.githubusercontent.com/deltarobotone/image_database/master/smart_control/smart_control%20(2).png" width="1000">](https://raw.githubusercontent.com/deltarobotone/image_database/master/smart_control/smart_control%20(2).png)
