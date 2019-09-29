@@ -4,11 +4,11 @@ If you want to get the One Smart Control Desktop Software the recommended way to
 
 [**>>>One Smart Control Desktop Installer (Windows 10)<<<**]()
 
-Check out the repositories wiki page for some introduction to the One Smart Control Desktop Software
+Check out the wiki page of this repository for some introduction to the One Smart Control Desktop Application
 
 [**>>>One Smart Control Wiki<<<**]()
 
-The One Smart Control Application is written in C++ using the Qt-Creator IDE and the Qt-Framework. Check out the development branch of this repository to have a look at the sourcecode.
+The One Smart Control Application is written in C++ using the Qt-Creator IDE and the Qt-Framework. Check out the development branch of this repository and have a look at the sourcecode.
 
 [**>>>Development Branch (Qt-Creator)<<<**]()
 
