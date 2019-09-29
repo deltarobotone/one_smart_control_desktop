@@ -16,7 +16,7 @@ If you want to use the raw build files you can get these files at the build bran
 
 [**>>>Pre-Build files fo Windows 10<<<**]()
 
-# Short overview and introduction
+# Overview and short introduction
 
 One Smart Control Desktop provides control functions on the right (if a robot is connected the commands are used directly). At the center of this application is a visualise of the robots workingspace. There are some buttons to etablish a connection to your Delta-Robot One. On the right side a filled flowchart represents a robot program. The toolbar provides add, change and delete functions. You can run, save or load a program using this toolbar.
 
