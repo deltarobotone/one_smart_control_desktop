@@ -25,6 +25,6 @@ One Smart Control Desktop provides control functions on the right (if a robot is
 
 
 
-At this image the robots tool center point (TCP) is moved to the right side means positive y-axis. The Gripper is closed (blue TCP) and the green light of the robot is enabled with full intensity. The TCP is near the workingspace limit. The space depends on the z-axis. The Workingsspace is splitted in some levels which are displayed on the vectical scale near the working area. The outside area (filled with pattern) is not reachable at the actual workingspace level.
+At this image the robots tool center point (TCP) is moved to the right side means positive y-axis. The Gripper is closed (blue TCP) and the green light of the robot is enabled with full intensity. The TCP is near the workingspace limit. The reachable position (x,y) depends on the z-axis. The workingspace is splitted in some levels which are displayed on the vectical scale near the working area. The outside area (filled with pattern) is not reachable at the actual workingspace level.
 
 [<img src="https://raw.githubusercontent.com/deltarobotone/image_database/master/smart_control/smart_control%20(2).png" width="1000">](https://raw.githubusercontent.com/deltarobotone/image_database/master/smart_control/smart_control%20(2).png)
