@@ -106,7 +106,7 @@ void SmartControlMainWindow::createLayout()
     setCentralWidget(basicWidget);
     workingSpaceWidget->setFixedSize(530,670);
     connectWidget->setFixedSize(470,105);
-    setFixedSize(1620,720);
+    setFixedSize(1600,720);
     hide();
 }
 

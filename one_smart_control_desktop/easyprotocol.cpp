@@ -65,7 +65,7 @@ int SerialPort::read(char &buffer, int length = 2)
     qint64 rxlength = 0;
     if(serialPortHandle->isOpen())
     {
-        serialPortHandle->waitForReadyRead();
+        serialPortHandle->waitForReadyRead(1);
         rxlength = serialPortHandle->read(&buffer,length);
     }
     return int(rxlength);
@@ -446,11 +446,11 @@ bool EasyProtocol::setCommunication()
                 }
             }
         }
-        connection.close();
         return false;
     }
     else
     {
+        connection.close();
         return false;
     }
 }
@@ -488,7 +488,9 @@ void EasyProtocol::findPorts(int baudrate, std::string &port, char& robotid)
                 {
                     robotid = rxchar;
                     port = portnr;
+                    connection.close();
                     break;
+
                 }
             }
             connection.close();
