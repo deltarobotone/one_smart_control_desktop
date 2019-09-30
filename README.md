@@ -1,6 +1,7 @@
 <Img src="https://github.com/deltarobotone/image_database/blob/master/logos/logos%20(8).PNG" width=500>
 
-# Download One Smart Control Desktop Software [**>>>here<<<**]() 
+# [**>>>Download here<<<**]()
+# One Smart Control Desktop Software  
 
 We recommend to download the official offline installer. Unzip the package and run the **OneSmartControlDesktopInstaller.exe** to install the application on your Windows 10 system (64 bit). A few steps later you can find a new entry in your start-menu. Launch the One Smart Control Desktop Application and have some fun with Delta-Robot One. We recommend a screen with a minimum of 1600x900 pixels to display the application full size. 
 
