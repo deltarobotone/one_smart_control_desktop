@@ -11,7 +11,7 @@ For more information about One Smart Control have look on the wiki page of this 
 
 The One Smart Control Application is written in C++ using the Qt-Creator IDE and Qt-Framework. Check out the development branch of this repository and have a look at the sourcecode.
 
-[**>>>Development Branch (Maset)<<<**](https://github.com/deltarobotone/one_smart_control_desktop/tree/master)
+[**>>>Development Branch (Master)<<<**](https://github.com/deltarobotone/one_smart_control_desktop/tree/master)
 
 If you want to use the raw build files you can get these at the build branch.
 
