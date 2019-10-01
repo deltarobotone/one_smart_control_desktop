@@ -19,7 +19,7 @@ If you want to use the raw build files you can get these at the build branch.
 
 # Overview and short introduction
 
-One Smart Control Desktop provides control functions on the right (if a robot is connected the commands run directly!). The center of this application contains a visualisation of the robot workingspace. Below th Workingspace are some buttons to etablish a connection to your Delta-Robot One. On the right side a flowchart represents a robot program (here prefilled). The toolbar below the chart provides add, change and delete functions. You can run, save or load a program using this toolbar.
+One Smart Control Desktop provides control functions on the left side (if a robot is connected the commands run directly!). The center of this application contains a visualisation of the robot workingspace. Below th Workingspace are some buttons to etablish a connection to your Delta-Robot One. On the right side a flowchart represents a robot program (here prefilled). The toolbar below the chart provides add, change and delete functions. You can run, save or load a program using this toolbar.
 
 [<img src="https://raw.githubusercontent.com/deltarobotone/image_database/master/smart_control/smart_control%20(1).png" width="1000">](https://raw.githubusercontent.com/deltarobotone/image_database/master/smart_control/smart_control%20(1).png)
 
