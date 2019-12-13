@@ -1,94 +1,304 @@
 # include "easyprotocol.h"
 
-SerialPort::SerialPort()
+UniversalSerialBusDevice::UniversalSerialBusDevice(QObject *parent): QObject(parent)
 {
-    serialPortHandle = new QSerialPort;
+    connect(this, SIGNAL(waitForSignal()),this,SLOT(waitForResponse()));
+    connect(this, SIGNAL(connectPort()),this,SLOT(connectHandle()));
+    connect(this, SIGNAL(disconnectPort()),this,SLOT(disconnectHandle()));
+    connect(this, SIGNAL(scanStarted()),this,SLOT(startPortScanner()));
+    connect(this, SIGNAL(checkDevice()),this,SLOT(checkDeviceHandle()));
+    connect(this, SIGNAL(startHandshake()),this,SLOT(handshake()));
+
+    serialPort.moveToThread(&communicationThread);
+    moveToThread(&communicationThread);
+    communicationThread.start();
 }
 
-SerialPort::~SerialPort()
+UniversalSerialBusDevice::~UniversalSerialBusDevice()
 {
-    if(serialPortHandle->isOpen())
+    if (isConnected())
     {
-        serialPortHandle->clear();
-        serialPortHandle->close();
+        disconnectDevice();
     }
-    delete serialPortHandle;
+    communicationThread.quit();
+    communicationThread.wait(1000);
 }
 
-void SerialPort::open(std::string port, int baudrate)
+void UniversalSerialBusDevice::connectHandle()
 {
     QString qstr = QString::fromStdString(port);
     QString adress = "\\\\.\\" + qstr;
 
-    serialPortHandle->setPortName(adress);
-    serialPortHandle->setBaudRate(baudrate);
-    serialPortHandle->setDataBits(QSerialPort::Data8);
-    serialPortHandle->setParity(QSerialPort::NoParity);
-    serialPortHandle->setStopBits(QSerialPort::OneStop);
-    serialPortHandle->setFlowControl(QSerialPort::NoFlowControl);
+    serialPort.setPortName(adress);
+    serialPort.setBaudRate(baudrate);
+    serialPort.setDataBits(QSerialPort::Data8);
+    serialPort.setParity(QSerialPort::NoParity);
+    serialPort.setStopBits(QSerialPort::OneStop);
+    serialPort.setFlowControl(QSerialPort::NoFlowControl);
 
-    if (serialPortHandle->open(QIODevice::ReadWrite))
+    if (serialPort.open(QIODevice::ReadWrite))
     {
-        serialPortHandle->setDataTerminalReady(true);
-        serialPortHandle->setRequestToSend(true);
+        serialPort.setDataTerminalReady(true);
+        serialPort.setRequestToSend(true);
         connected = true;
+        if(enable) emit checkDevice();
     }
     else
     {
         connected = false;
-        clear();
+        clearPort();
     }
 }
 
-void SerialPort::close(void)
+void UniversalSerialBusDevice::disconnectHandle()
 {
-    if(serialPortHandle->isOpen())
+    QMutex mutex;
+    mutex.lock();
+    if(serialPort.isOpen())
     {
-        serialPortHandle->clear();
-        serialPortHandle->close();
+        serialPort.clear();
+        serialPort.close();
     }
     connected = false;
+    emit deviceDisconnected();
+    mutex.unlock();
 }
 
-void SerialPort::write(std::string txString, int lenght = 22)
+void UniversalSerialBusDevice::connectDevice(int deviceIndex)
 {
-    if(serialPortHandle->isOpen())
+    QMutex mutex;
+    mutex.lock();
+    this->port = deviceList.at(deviceIndex).toStdString();
+    enable=true;
+    mutex.unlock();
+    emit connectPort();
+}
+
+void UniversalSerialBusDevice::checkDeviceHandle()
+{
+    emit connectingDevice();
+    emit startHandshake();
+}
+
+void UniversalSerialBusDevice::disconnectDevice()
+{
+    QMutex mutex;
+    mutex.lock();
+    enable = false;
+    mutex.unlock();
+    emit disconnectPort();
+}
+
+void UniversalSerialBusDevice::receive(char rxChar)
+{
+    QMutex mutex;
+    mutex.lock();
+    receivedData = rxChar;
+    mutex.unlock();
+
+    if (!init)
     {
-        serialPortHandle->write(txString.c_str(),lenght);
-        serialPortHandle->waitForBytesWritten();
+        emit dataReceived();
+        init = true;
     }
+    else
+    {
+        if (!queueTXData.isEmpty())send();
+        else emit freeChannel();
+    }
+    if(enable) emit waitForSignal();
+}
+
+void UniversalSerialBusDevice::send()
+{
+    if (!queueTXData.isEmpty())
+    {
+        if(block==false)
+        {
+            std::string txString = queueTXData.dequeue();
+            if(txString != "T")
+            {
+                transmit(txString);
+            }
+            else
+            {
+                std::string time = queueTXData.dequeue();
+                waitFor(std::stoi(time));
+            }
+        }
+    }
+}
+
+void UniversalSerialBusDevice::transmit(std::string txString)
+{
+    QString timestamp = QDateTime::currentDateTime().toString("ss,zzzz");
+    qDebug() << timestamp ;
+
+    int lenght = 22;
+    if(serialPort.isOpen())
+    {
+        serialPort.clear();
+        serialPort.write(txString.c_str(),lenght);
+        serialPort.waitForBytesWritten();
+        emit dataTransmitted();
+    }
+}
+
+void UniversalSerialBusDevice::stopTransmission()
+{
+    QMutex mutex;
+    mutex.lock();
+    queueTXData.clear();
+    mutex.unlock();
+}
+
+void UniversalSerialBusDevice::write(std::string txString)
+{
+    QMutex mutex;
+    mutex.lock();
+    queueTXData.enqueue(txString);
+    mutex.unlock();
     return;
 }
 
-int SerialPort::read(char &buffer, int length = 2)
+int UniversalSerialBusDevice::readPort(char &buffer, int length = 2)
 {
     qint64 rxlength = 0;
-    if(serialPortHandle->isOpen())
+    if(serialPort.isOpen())
     {
-        serialPortHandle->waitForReadyRead(1);
-        rxlength = serialPortHandle->read(&buffer,length);
+        serialPort.waitForReadyRead(1000);
+        rxlength = serialPort.read(&buffer,length);
     }
     return int(rxlength);
 }
 
-void SerialPort::clear()
+char UniversalSerialBusDevice::read()
 {
-    if(serialPortHandle->isOpen())
+    char data;
+    QMutex mutex;
+    mutex.lock();
+    data = receivedData;
+    receivedData = ' ';
+    mutex.unlock();
+    return data;
+}
+
+void UniversalSerialBusDevice::waitForResponse()
+{
+    char rxData = ' ';
+    while (enable)
     {
-        serialPortHandle->clear();
+        rxData = ' ';
+        clearPort();
+        if (readPort(rxData, 1) != 0)
+        {
+            receive(rxData);
+            break;
+        }
     }
 }
 
-bool SerialPort::isOpen()
+void UniversalSerialBusDevice::waitFor(int milliseconds)
 {
-    if(serialPortHandle->isOpen()) connected = true;
-    else
+    block = true;
+    qDebug() << "wait" ;
+    QString timestamp = QDateTime::currentDateTime().toString("ss,zzzz");
+    qDebug() << timestamp ;
+    qDebug() << milliseconds ;
+    emit dataTransmitted();
+    QThread::msleep(milliseconds);
+    block = false;
+    send();
+}
+
+QList<QString> UniversalSerialBusDevice::getDeviceList(){return deviceList;};
+
+void UniversalSerialBusDevice::clearPort()
+{
+    if(serialPort.isOpen())serialPort.clear();
+}
+
+bool UniversalSerialBusDevice::isConnected()
+{
+    bool status = false;
+
+    QMutex mutex;
+    mutex.lock();
+    if(serialPort.isOpen()) connected = true;
+    else connected = false;
+    status=connected;
+    mutex.unlock();
+
+    return status;
+}
+
+void UniversalSerialBusDevice::startDeviceDiscovery()
+{
+    scanStatusValue=0;
+    emit updateScanValue(scanStatusValue);
+    emit scanStarted();
+    QThread::msleep(30);
+}
+
+void UniversalSerialBusDevice::updateScanStatus()
+{
+    scanStatusValue++;
+    emit updateScanValue(scanStatusValue);
+}
+
+void UniversalSerialBusDevice::startPortScanner()
+{
+    deviceList.clear();
+    for (int i = 0; i < 256; i++)
     {
-        connected = false;
-        clear();
-        close();
+        emit updateScanStatus();
+
+        std::string nr = std::to_string(i);
+        port = "COM" + nr;
+
+        emit connectPort();
+        QThread::msleep(30);
+
+        if (isConnected())
+        {
+            deviceList.append(QString::fromStdString(port));
+        }
+        emit disconnectDevice();
+        QThread::msleep(30);
     }
-    return connected;
+    emit scanFinished();
+    QThread::msleep(30);
+}
+
+void UniversalSerialBusDevice::handshake()
+{
+    QThread::msleep(50);
+
+    if (isConnected())
+    {
+        QThread::msleep(500);
+        char rxchar = ' ';
+        char check = ' ';
+
+        readPort(rxchar);
+
+        if (rxchar != ' ' && rxchar != check)
+        {
+            check = rxchar;
+            rxchar = ' ';
+            QThread::msleep(500);
+        }
+
+        readPort(rxchar);
+        if (check != ' ' && rxchar == check)
+        {
+            emit deviceConnected(rxchar);
+            emit waitForSignal();
+            return;
+        }
+        emit handshakeFailed();
+    }
+    emit disconnectPort();
 }
 
 Utils::Utils()
@@ -171,13 +381,13 @@ void Utils::fillData(std::string &txString, int length)
     }
 }
 
-Move::Move(SerialPort & serialport) : Basic(serialport)
+Move::Move(UniversalSerialBusDevice & serialport) : Basic(serialport)
 {
 }
 
 void Move::ptp(float positionX, float positionY, float positionZ, float speed)
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         Pos pos;
         pos.x = positionX;
@@ -188,9 +398,7 @@ void Move::ptp(float positionX, float positionY, float positionZ, float speed)
         std::string txString;
         txString = txString + robotid + deviceid + "M" + s + v.erase(0, 1);
         utils.fillData(txString);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
@@ -201,163 +409,146 @@ void Move::ptp(Pos position, float speed)
     return;
 }
 
-Gripper::Gripper(SerialPort & serialport) : Basic(serialport)
+Gripper::Gripper(UniversalSerialBusDevice & serialport) : Basic(serialport)
 {
 }
 
 void Gripper::open()
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::gripperopen;
         utils.fillData(txString);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
 void Gripper::close()
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::gripperclose;
         utils.fillData(txString);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
-Light::Light(SerialPort & serialport) : Basic(serialport)
+Light::Light(UniversalSerialBusDevice & serialport) : Basic(serialport)
 {
 }
 
 void Light::on(float intensity)
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string vi = utils.valueToString(intensity);
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::lighton;
         utils.fillData(txString, 18);
         txString = txString + vi.erase(0, 1);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
 void Light::off()
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::lightoff;
         utils.fillData(txString);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
 void Light::setColour(std::string colour, float intensity)
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string vi = utils.valueToString(intensity);
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::lighton + '#' + colour;
         utils.fillData(txString, 18);
         txString = txString + vi.erase(0, 1);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
 void Light::setIntensity(float intensity)
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string vi = utils.valueToString(intensity);
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::lighton;
         utils.fillData(txString, 18);
         txString = txString + vi.erase(0, 1);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
-ExtMotor::ExtMotor(SerialPort & serialport) : Basic(serialport)
+ExtMotor::ExtMotor(UniversalSerialBusDevice & serialport) : Basic(serialport)
 {
 }
 
 void ExtMotor::stop()
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::extmotoroff;
         utils.fillData(txString);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
 void ExtMotor::setSpeed(float speed)
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string v = utils.valueToString(speed);
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::extmotoron;
         utils.fillData(txString, 18);
         txString = txString + v.erase(0, 1);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
 void ExtMotor::start(float speed)
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
         std::string v = utils.valueToString(speed);
         std::string txString;
         txString = txString + robotid + deviceid + Protocol::extmotoron;
         utils.fillData(txString, 18);
         txString = txString + v.erase(0, 1);
-        serial.clear();
         serial.write(txString);
-        waitForRobot();
     }
     return;
 }
 
-Functions::Functions(SerialPort & serialport) : Basic(serialport)
+Functions::Functions(UniversalSerialBusDevice & serialport) : Basic(serialport)
 {
 }
 
 void Functions::waitFor(unsigned long milliseconds)
 {
-    if (serial.isOpen())
+    if (serial.isConnected())
     {
-        QThread::msleep(milliseconds);
+        serial.write("T");
+        serial.write(std::to_string(milliseconds));
     }
 }
 
@@ -368,146 +559,20 @@ EasyProtocol::EasyProtocol() :
     light(connection),
     extmotor(connection)
 {
+
 }
 EasyProtocol::~EasyProtocol()
 {
-    if (connection.isOpen())
+    if (connection.isConnected())
     {
-        connection.clear();
-        connection.close();
+        connection.disconnectDevice();
     }
-}
-void EasyProtocol::findRobot()
-{
-    findPorts(baudrate, port, robotid);
-}
-void EasyProtocol::setPort(std::string port, int baudrate)
-{
-    this->port = port;
-    this->baudrate = baudrate;
 }
 
 std::string EasyProtocol::getPort(){return port;};
-
-void EasyProtocol::start()
-{
-    connected = setCommunication();
-    move.setSerialStatus(connected);
-    gripper.setSerialStatus(connected);
-    light.setSerialStatus(connected);
-    extmotor.setSerialStatus(connected);
-    functions.setSerialStatus(connected);
-
-}
-void EasyProtocol::start(char robotid, char deviceid)
-{
-    this->robotid = robotid;
-    this->deviceid = deviceid;
-    move.setID(this->robotid, this->deviceid);
-    gripper.setID(this->robotid, this->deviceid);
-    light.setID(this->robotid, this->deviceid);
-    extmotor.setID(this->robotid, this->deviceid);
-    functions.setID(this->robotid, this->deviceid);
-    connected = setCommunication();
-    move.setSerialStatus(connected);
-    gripper.setSerialStatus(connected);
-    light.setSerialStatus(connected);
-    extmotor.setSerialStatus(connected);
-    functions.setSerialStatus(connected);
-}
-void EasyProtocol::stop()
-{
-    connection.clear();
-    connection.close();
-    connected = false;
-    move.setSerialStatus(connected);
-    gripper.setSerialStatus(connected);
-    light.setSerialStatus(connected);
-    extmotor.setSerialStatus(connected);
-    functions.setSerialStatus(connected);
-}
-
-bool EasyProtocol::setCommunication()
-{
-    connection.open(port, baudrate);
-
-    if (connection.isOpen())
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            char rxchar = ' ';
-            connection.clear();
-            QThread::msleep(500);
-            if (connection.read(rxchar, 1) != 0)
-            {
-                if (rxchar == robotid)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    else
-    {
-        connection.close();
-        return false;
-    }
-}
-
-void EasyProtocol::findPorts(int baudrate, std::string &port, char& robotid)
-{
-    for (int i = 0; i < 256; i++)
-    {
-        std::string nr = std::to_string(i);
-        std::string portnr = "COM" + nr;
-
-        connection.open(portnr, baudrate);
-
-        if (connection.isOpen())
-        {
-            char rxchar = ' ';
-            char check = ' ';
-
-            connection.clear();
-            QThread::msleep(500);
-            if (connection.read(rxchar, 1) != 0)
-            {
-                if (rxchar != ' ' && rxchar != check)
-                {
-                    check = rxchar;
-                    rxchar = ' ';
-                }
-            }
-
-            connection.clear();
-            QThread::msleep(500);
-            if (connection.read(rxchar, 1) != 0)
-            {
-                if (check != ' ' && rxchar == check)
-                {
-                    robotid = rxchar;
-                    port = portnr;
-                    connection.close();
-                    break;
-
-                }
-            }
-            connection.close();
-        }
-        QThread::msleep(20);
-    }
-    return;
-}
-
-
 char EasyProtocol::getRobotID(){return robotid;};
-char EasyProtocol::getDeviceID(){return deviceid;};
-void EasyProtocol::setRobotID(char id){robotid = id;};
-void EasyProtocol::setDeviceID(char id){deviceid=id;};
-bool EasyProtocol::isConnected(){return connected;};
 
-Basic::Basic(SerialPort &serialport) :
+Basic::Basic(UniversalSerialBusDevice &serialport) :
     robotid('1'),
     deviceid('1'),
     serial(serialport),
@@ -515,34 +580,8 @@ Basic::Basic(SerialPort &serialport) :
 {
 }
 
-void Basic::waitForRobot()
-{
-    char rxData;
-    if (serial.isOpen())
-    {
-        while (true)
-        {
-            rxData = ' ';
-            serial.clear();
-            if (serial.read(rxData, 1) != 0)
-            {
-                if (rxData == '0')
-                {
-                }
-                if (rxData == robotid) break;
-            }
-        }
-    }
-}
-
-
 void Basic::setID(char robotid, char deviceid)
 {
     this->robotid = robotid;
     this->deviceid = deviceid;
-}
-
-void Basic::setSerialStatus(bool status)
-{
-    connected = status;
 }

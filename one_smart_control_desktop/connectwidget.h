@@ -6,6 +6,9 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QDialog>
+#include <QListView>
+#include <QProgressBar>
+#include <QStringListModel>
 
 #include "easyprotocol.h"
 #include "smartcontroldata.h"
@@ -23,12 +26,14 @@ private:
     EasyProtocol &robot;
     OneSmartControl::SmartControlData &controlData;
 
-    QGridLayout *basicLayout;
+    QHBoxLayout *basicLayout;
     QHBoxLayout *connectLayout;
-    QVBoxLayout *statusLayout;
+    QVBoxLayout *leftLayout;
+    QVBoxLayout *rightLayout;
 
     QWidget *connectWidget;
-    QWidget *statusWidget;
+    QWidget *leftWidget;
+    QWidget *rightWidget;
 
     QLabel *statusLabel;
     QLabel *idLabel;
@@ -36,17 +41,37 @@ private:
 
     QPushButton *connectButton;
     QPushButton *disconnectButton;
+    QPushButton *refreshButton;
+
+    QProgressBar *scanProgressBar;
+
+    QListView *devicesListView;
+    QStringList *devicesStringList;
+    QStringListModel *devicesListModel;
 
     QDialog *connectionFailedDialog;
     QVBoxLayout *connectionFailedLayout;
     QImage *connectionFailedImage;
     QLabel *connectionfailedWidget;
 
+    bool scanState = false;
+
     void createLayout();
 
 private slots:
     void connectButtonHandle();
     void disconnectButtonHandle();
+    void refreshButtonHandle();
+    void scanProgressBarHandle(int value);
+    void selectionChangedHandle( const QModelIndex& selected, const QModelIndex& deselected );
+
+public slots:
+    void scanFinished();
+    void scanStarted();
+    void deviceDisconnected();
+    void connectingDevice();
+    void handshakeFailed();
+    void deviceConnected(char id);
 };
 
 } // OneSmartControl

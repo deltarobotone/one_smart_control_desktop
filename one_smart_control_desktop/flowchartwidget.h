@@ -24,15 +24,13 @@ class FlowChartWidget : public QWidget
     Q_OBJECT
 public:
     explicit FlowChartWidget(EasyProtocol &easyProtocol, OneSmartControl::SmartControlData &smartControlData, QWidget *parent = nullptr);
-
+    OneSmartControl::TimeWidget *timeWidget;
 private:
     EasyProtocol &robot;
     OneSmartControl::SmartControlData &controlData;
-    OneSmartControl::TimeWidget *timeWidget;
 
     QVBoxLayout *basicLayout;
     QVBoxLayout *addDialogLayout;
-
     QHBoxLayout *buttonRowLayout;
 
     QWidget *buttonRow;
@@ -56,8 +54,13 @@ private:
 
     QDialog *addDialog;
 
+    bool running = false;
+    int selectedRow = 0;
+
 public slots:
     void addData();
+    void freeChannel();
+    void dataTransmitted();
 
 private slots:
     void loadButtonHandle();
@@ -67,6 +70,10 @@ private slots:
     void playButtonHandle();
     void upButtonHandle();
     void downButtonHandle();
+
+signals:
+    void playlistOn();
+    void playlistOff();
 };
 
 } // OneSmartControl

@@ -32,6 +32,10 @@ SmartControlMainWindow::SmartControlMainWindow(QWidget *parent) :
     connectLayout = new QVBoxLayout;
     connectWidget = new OneSmartControl::ConnectWidget(robot,smartControlData);
 
+    infoLabel = new QLabel;
+    infoGroupbox = new QGroupBox;
+    infoLayout = new QVBoxLayout;
+
     basicWidget = new QWidget(this);
     basicLayout = new QHBoxLayout;
 
@@ -48,13 +52,18 @@ SmartControlMainWindow::SmartControlMainWindow(QWidget *parent) :
 
 SmartControlMainWindow::~SmartControlMainWindow()
 {
-    robot.stop();
+    robot.connection.disconnectDevice();
     delete ui;
 }
 
 void SmartControlMainWindow::createLayout()
 {
     setStyleSheet("background-color:white;");
+
+    connect(sliderWidget,SIGNAL(toChart()),this,SLOT(showToChartMessage()));
+    connect(lightWidget,SIGNAL(toChart()),this,SLOT(showToChartMessage()));
+    connect(gripperWidget,SIGNAL(toChart()),this,SLOT(showToChartMessage()));
+    connect(flowChartWidget->timeWidget,SIGNAL(toChart()),this,SLOT(showToChartMessage()));
 
     sliderGroupbox->setLayout(sliderLayout);
     sliderGroupbox->setStyleSheet("QGroupBox {border-radius: 10px; border: 2px solid rgb(200, 200, 200);}");
@@ -86,12 +95,22 @@ void SmartControlMainWindow::createLayout()
     connectGroupbox->setStyleSheet("QGroupBox {border-radius: 10px; border: 2px solid rgb(200, 200, 200);}");
     connectLayout->addWidget(connectWidget);
 
+    infoGroupbox->setLayout(infoLayout);
+    infoGroupbox->setStyleSheet("QGroupBox {border-radius: 10px; border: 2px solid rgb(200, 200, 200);}");
+    infoLayout->addWidget(infoLabel);
+
+    QFont font("Arial Rounded MT Bold", 14);
+    infoLabel->setFont(font);
+    infoLabel->setText("");
+
     leftLayout->addWidget(sliderGroupbox);
     leftLayout->addWidget(lightGroupbox);
     leftLayout->addWidget(gripperGroupbox);
 
     centerLayout->addWidget(workingSpaceGroupbox);
     centerLayout->addWidget(connectGroupbox);
+
+    rightLayout->addWidget(infoGroupbox);
     rightLayout->addWidget(flowChartGroupbox);
 
     leftWidget->setLayout(leftLayout);
@@ -105,8 +124,29 @@ void SmartControlMainWindow::createLayout()
 
     setCentralWidget(basicWidget);
     workingSpaceWidget->setFixedSize(530,670);
-    connectWidget->setFixedSize(470,105);
     setFixedSize(1600,720);
     hide();
+}
+
+void SmartControlMainWindow::showToChartMessage()
+{
+    if(smartControlData.dataid == ID::move && smartControlData.workingSpaceStatus)
+    {
+        infoLabel->setAlignment(Qt::AlignHCenter);
+        infoLabel->setStyleSheet("QLabel{ color: rgb(200, 50, 50);}");
+        infoLabel->setText("Position out of workingspace!");
+    }
+    else
+    {
+        infoLabel->setAlignment(Qt::AlignHCenter);
+        infoLabel->setStyleSheet("QLabel{ color: rgb(30, 144, 255);}");
+        infoLabel->setText("Command added to flowchart >>");
+    }
+    QTimer::singleShot(750, this, &SmartControlMainWindow::hideToChartMessage);
+}
+
+void SmartControlMainWindow::hideToChartMessage()
+{
+    infoLabel->setText("");
 }
 

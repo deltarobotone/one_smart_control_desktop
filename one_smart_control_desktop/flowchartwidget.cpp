@@ -30,48 +30,60 @@ OneSmartControl::FlowChartWidget::FlowChartWidget(EasyProtocol &easyProtocol, On
 }
 
 void OneSmartControl::FlowChartWidget::createLayout()
-{
-    setStyleSheet("background-color:white;");
-
+{  
     QFont font("Arial Rounded MT Bold", 14);
 
+    controlChartView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    controlChartView->setSelectionMode(QAbstractItemView::SingleSelection);
     controlChartView->setFont(font);
-    controlChartView->setStyleSheet("QListView {border-radius: 10px; border: 2px solid rgb(200, 200, 200);}");
+    controlChartView->setStyleSheet("QListView {background-color: rgb(255, 255, 255); border-radius: 10px; border: 2px solid rgb(200, 200, 200); padding: 20px 20px;}"
+                                    "QListView::item:selected{background-color: rgb(30, 144, 255);border-radius: 5px; border: 2px solid rgb(200, 200, 200);}"
+                                    "QScrollBar:horizontal{height: 10px; background-color: rgb(200, 200, 200); border: 5px transparent; border-radius: 5px;}"
+                                    "QScrollBar::handle:horizontal{height: 10px; background: rgb(30, 144, 255); border: 5px rgb(30, 144, 255); border-radius: 5px;}"
+                                    "QScrollBar::add-line:horizontal{border: none;background: none;}"
+                                    "QScrollBar::sub-line:horizontal{border: none;background: none;}"
+                                    "QScrollBar:vertical{width: 10px; background-color: rgb(200, 200, 200); border: 5px transparent; border-radius: 5px;}"
+                                    "QScrollBar::handle:vertical{width: 10px; background: rgb(30, 144, 255); border: 5px rgb(30, 144, 255); border-radius: 5px;}"
+                                    "QScrollBar::add-line:vertical{border: none;background: none;}"
+                                    "QScrollBar::sub-line:vertical{border: none;background: none;}");
 
     loadButton->setIcon(QIcon(":/images/icons/load.png"));
     loadButton->setStyleSheet("QPushButton{ background-color: rgb(255, 255, 255); border-radius: 10px; border: 1px solid rgb(255, 255, 255);}");
-    loadButton->setIconSize(QSize(65, 65));
+    loadButton->setIconSize(QSize(60, 60));
     connect(loadButton, SIGNAL(released()),this,SLOT(loadButtonHandle()));
 
     saveButton->setIcon(QIcon(":/images/icons/save.png"));
     saveButton->setStyleSheet("QPushButton{ background-color: rgb(255, 255, 255); border-radius: 10px; border: 1px solid rgb(255, 255, 255);}");
-    saveButton->setIconSize(QSize(65, 65));
+    saveButton->setIconSize(QSize(60, 60));
     connect(saveButton, SIGNAL(released()),this,SLOT(saveButtonHandle()));
 
     addButton->setIcon(QIcon(":/images/icons/add.png"));
     addButton->setStyleSheet("QPushButton{ background-color: rgb(255, 255, 255); border-radius: 10px; border: 1px solid rgb(255, 255, 255);}");
-    addButton->setIconSize(QSize(65, 65));
+    addButton->setIconSize(QSize(60, 60));
     connect(addButton, SIGNAL(released()),this,SLOT(addButtonHandle()));
 
     deleteButton->setIcon(QIcon(":/images/icons/delete.png"));
     deleteButton->setStyleSheet("QPushButton{ background-color: rgb(255, 255, 255); border-radius: 10px; border: 1px solid rgb(255, 255, 255);}");
-    deleteButton->setIconSize(QSize(65, 65));
+    deleteButton->setIconSize(QSize(60, 60));
     connect(deleteButton, SIGNAL(released()),this,SLOT(deleteButtonHandle()));
 
     playButton->setIcon(QIcon(":/images/icons/play.png"));
     playButton->setStyleSheet("QPushButton{ background-color: rgb(255, 255, 255); border-radius: 10px; border: 1px solid rgb(255, 255, 255);}");
-    playButton->setIconSize(QSize(65, 65));
+    playButton->setIconSize(QSize(60, 60));
     connect(playButton, SIGNAL(released()),this,SLOT(playButtonHandle()));
 
     upButton->setIcon(QIcon(":/images/icons/up.png"));
     upButton->setStyleSheet("QPushButton{ background-color: rgb(255, 255, 255); border-radius: 10px; border: 1px solid rgb(255, 255, 255);}");
-    upButton->setIconSize(QSize(65, 65));
+    upButton->setIconSize(QSize(60, 60));
     connect(upButton, SIGNAL(released()),this,SLOT(upButtonHandle()));
 
     downButton->setIcon(QIcon(":/images/icons/down.png"));
     downButton->setStyleSheet("QPushButton{ background-color: rgb(255, 255, 255); border-radius: 10px; border: 1px solid rgb(255, 255, 255);}");
-    downButton->setIconSize(QSize(65, 65));
+    downButton->setIconSize(QSize(60, 60));
     connect(downButton, SIGNAL(released()),this,SLOT(downButtonHandle()));
+
+    connect(&robot.connection,SIGNAL(freeChannel()),this,SLOT(freeChannel()));
+    connect(&robot.connection,SIGNAL(dataTransmitted()),this,SLOT(dataTransmitted()));
 
     connect(timeWidget,SIGNAL(toChart()),this,SLOT(addData()));
 
@@ -93,10 +105,17 @@ void OneSmartControl::FlowChartWidget::createLayout()
 
 void OneSmartControl::FlowChartWidget::addData()
 {
-    controlDataStore.append(controlData);
-    controlDataList->append(controlData.toString());
-    controlDataListModel->setStringList(*controlDataList);
-    controlChartView->setModel(controlDataListModel);
+    if(controlData.dataid == ID::move && controlData.workingSpaceStatus)
+    {
+        //Workingspace-Limit
+    }
+    else
+    {
+        controlDataStore.append(controlData);
+        controlDataList->append(controlData.toString());
+        controlDataListModel->setStringList(*controlDataList);
+        controlChartView->setModel(controlDataListModel);
+    }
 }
 
 void OneSmartControl::FlowChartWidget::addButtonHandle()
@@ -171,15 +190,44 @@ void OneSmartControl::FlowChartWidget::deleteButtonHandle()
 
     if(i>0)
     {
-    QModelIndex index = controlDataListModel->index(i-1);
-    controlChartView->setCurrentIndex(index);
+        QModelIndex index = controlDataListModel->index(i-1);
+        controlChartView->setCurrentIndex(index);
     }
     else controlChartView->clearSelection();
 }
 
 void OneSmartControl::FlowChartWidget::playButtonHandle()
 {
-    if(robot.isConnected())activatePlayList();
+    if(robot.connection.isConnected()&&!running&&!controlDataList->empty())
+    {
+        loadButton->setEnabled(false);
+        saveButton->setEnabled(false);
+        deleteButton->setEnabled(false);
+        upButton->setEnabled(false);
+        downButton->setEnabled(false);
+        addButton->setEnabled(false);
+
+        emit playlistOn();
+
+        running = true;
+        playButton->setIcon(QIcon(":/images/icons/stop.png"));
+        activatePlayList();
+    }
+    else
+    {
+        loadButton->setEnabled(true);
+        saveButton->setEnabled(true);
+        deleteButton->setEnabled(true);
+        upButton->setEnabled(true);
+        downButton->setEnabled(true);
+
+        controlChartView->setSelectionMode(QAbstractItemView::SingleSelection);
+        emit playlistOff();
+
+        running = false;
+        playButton->setIcon(QIcon(":/images/icons/play.png"));
+        robot.connection.stopTransmission();
+    }
 }
 
 void OneSmartControl::FlowChartWidget::loadButtonHandle()
@@ -239,6 +287,7 @@ void OneSmartControl::FlowChartWidget::saveButtonHandle()
     stream << "Version: " << OneSmartControl::version.toString() << "\n";
 
     timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+
     stream << "Timestamp: " << timestamp << "\n";
 
     for (int i=0; i<controlDataStore.size();i++)
@@ -252,23 +301,22 @@ void OneSmartControl::FlowChartWidget::activatePlayList()
 {
     QFont font("Arial Rounded MT Bold", 14);
 
-    QModelIndex index = controlDataListModel->index(0);
+    selectedRow=0;
+    QModelIndex index = controlDataListModel->index(selectedRow);
+    controlChartView->setCurrentIndex(index);
+    controlChartView->repaint();
 
     for (int i = 0;i<controlDataStore.size();i++)
     {
-        index = controlDataListModel->index(i);
-        controlChartView->setCurrentIndex(index);
-        controlChartView->repaint();
-
         controlData = controlDataStore.at(i);
         if(controlData.dataid == ID::move)
         {
-        robot.move.ptp(controlData.xPosition,controlData.yPosition,controlData.zPosition,controlData.velocity);
+            robot.move.ptp(controlData.xPosition,controlData.yPosition,controlData.zPosition,controlData.velocity);
         }
         if(controlData.dataid == ID::gripper)
         {
-        if(controlData.gripperStatus == true) robot.gripper.close();
-        else robot.gripper.open();
+            if(controlData.gripperStatus == true) robot.gripper.close();
+            else robot.gripper.open();
         }
         if(controlData.dataid == ID::light)
         {
@@ -279,5 +327,33 @@ void OneSmartControl::FlowChartWidget::activatePlayList()
         {
             robot.functions.waitFor(controlData.waitFortime);
         }
+    }
+}
+
+void OneSmartControl::FlowChartWidget::freeChannel()
+{
+    running = false;
+    playButton->setIcon(QIcon(":/images/icons/play.png"));
+
+    loadButton->setEnabled(true);
+    saveButton->setEnabled(true);
+    deleteButton->setEnabled(true);
+    upButton->setEnabled(true);
+    downButton->setEnabled(true);
+    addButton->setEnabled(true);
+
+    controlChartView->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    emit playlistOff();
+}
+
+void OneSmartControl::FlowChartWidget::dataTransmitted()
+{
+    if(running)
+    {
+        selectedRow++;
+        QModelIndex index = controlDataListModel->index(selectedRow);
+        controlChartView->setCurrentIndex(index);
+        controlChartView->repaint();
     }
 }

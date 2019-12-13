@@ -57,6 +57,10 @@ private:
     QVBoxLayout *connectLayout;
     OneSmartControl::ConnectWidget *connectWidget;
 
+    QGroupBox *infoGroupbox;
+    QVBoxLayout *infoLayout;
+    QLabel *infoLabel;
+
     QWidget *basicWidget;
     QHBoxLayout *basicLayout;
 
@@ -70,6 +74,11 @@ private:
     QVBoxLayout *rightLayout;
 
     void createLayout();
+
+private slots:
+
+    void showToChartMessage();
+    void hideToChartMessage();
 };
 
 #endif // SMARTCONTROLMAINWINDOW_H

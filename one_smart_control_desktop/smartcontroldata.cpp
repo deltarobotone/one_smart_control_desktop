@@ -234,7 +234,7 @@ void OneSmartControl::SmartControlData::fromDataString(QString dataString)
 
         if (datalist.at(1).toInt()==0)
         {
-            colour = "";
+            colour = Protocol::lightoff;
             intensity = 0;
         }
         if (datalist.at(1).toInt()==1)

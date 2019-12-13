@@ -4,25 +4,99 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QDateTime>
+#include <QObject>
+#include <QMutex>
+#include <QThread>
+#include <QQueue>
 #include <QIODevice>
 #include <QThread>
+#include <QTimer>
 #include <iostream>
 #include <cmath>
+#include <QDebug>
 
-class SerialPort
+class UniversalSerialBusDevice: public QObject
 {
+    Q_OBJECT
 private:
-    QSerialPort *serialPortHandle;
-    bool connected;
+    QThread communicationThread;
+
+    bool connected = false;
+    bool block = false;
+    bool init = false;
+    bool enable = false;
+    int scanStatusValue = 0;
+    char receivedData = ' ';
+
+    QList<QString> deviceList;
+    QQueue<std::string> queueTXData;
+
+    std::string port = "COM1";
+    int baudrate = 9600;
+
+    void waitFor(int milliseconds);
+    void send();
+    int readPort(char &buffer, int length);
+    void clearPort();
+
 public:
-    SerialPort();
-    ~SerialPort();
-    void open(std::string port = "COM1", int baudrate = 9600);
-    void close();
-    void write(std::string txString, int lenght);
-    int read(char &buffer, int length);
-    void clear();
-    bool isOpen();
+    explicit UniversalSerialBusDevice(QObject *parent = nullptr);
+    ~UniversalSerialBusDevice();
+
+    QSerialPort serialPort;
+
+    QList<QString> getDeviceList();
+
+    void connectDevice(int deviceIndex);
+    void disconnectDevice();
+
+    void write(std::string txString);
+    char read();
+
+    bool isConnected();
+    void stopTransmission();
+
+    void startDeviceDiscovery();
+
+signals:
+    void scanFinished();
+    void scanStarted();
+
+    void connectingDevice();
+    void deviceConnected(char id);
+    void deviceDisconnected();
+
+    void freeChannel();
+    void dataTransmitted();
+    void dataReceived();
+
+    void waitForSignal();
+
+    void connectPort();
+    void disconnectPort();
+
+    void checkDevice();
+    void startHandshake();
+    void handshakeFailed();
+
+    void updateScanValue(int value);
+
+private slots:
+
+    void handshake();
+
+    void updateScanStatus();
+
+    void receive(char rxChar);
+
+    void transmit(std::string txString);
+
+    void waitForResponse();
+
+    void connectHandle();
+    void disconnectHandle();
+    void startPortScanner();
+    void checkDeviceHandle();
 };
 
 namespace Protocol
@@ -86,22 +160,17 @@ class Basic
 protected:
     char robotid ='1';
     char deviceid = '1';
-    bool info = false;
-    SerialPort& serial;
+    UniversalSerialBusDevice& serial;
     Utils utils;
-    bool connected = false;
-    void waitForRobot();
 public:
-    Basic(SerialPort& serialport);
-    void printInfo(bool status);
+    Basic(UniversalSerialBusDevice& serialport);
     void setID(char robotid = '1', char deviceid = '1');
-    void setSerialStatus(bool status);
 };
 
 class Move:public Basic
 {
 public:
-    Move(SerialPort& serialport);
+    Move(UniversalSerialBusDevice& serialport);
     void ptp(float positionX, float positionY, float positionZ, float speed = 50.0);
     void ptp(Pos position, float speed = 50.0);
 };
@@ -109,7 +178,7 @@ public:
 class Gripper:public Basic
 {
 public:
-    Gripper(SerialPort& serialport);
+    Gripper(UniversalSerialBusDevice& serialport);
     void open();
     void close();
 };
@@ -117,7 +186,7 @@ public:
 class Light:public Basic
 {
 public:
-    Light(SerialPort& serialport);
+    Light(UniversalSerialBusDevice& serialport);
 
     void on(float intensity = 100.0);
     void off();
@@ -128,7 +197,7 @@ public:
 class ExtMotor:public Basic
 {
 public:
-    ExtMotor(SerialPort& serialport);
+    ExtMotor(UniversalSerialBusDevice& serialport);
     void start(float speed = 255.0);
     void stop();
     void setSpeed(float speed);
@@ -137,41 +206,29 @@ public:
 class Functions :public Basic
 {
 public:
-    Functions(SerialPort& serialport);
+    Functions(UniversalSerialBusDevice& serialport);
     void waitFor(unsigned long milliseconds);
 };
 
 class EasyProtocol
 {
 private:
-    int baudrate = 9600;
     char robotid = '1';
-    char deviceid = '1';
     std::string port = "COM1";
-    bool connected = false;
-    bool info = false;
-    bool setCommunication();
-    void findPorts(int baudrate, std::string& port, char& robotid);
+
 public:
     EasyProtocol();
     ~EasyProtocol();
-    SerialPort connection;
+
+    UniversalSerialBusDevice connection;
     Functions functions;
     Move move;
     Gripper gripper;
     Light light;
     ExtMotor extmotor;
-    void findRobot();
-    void setPort(std::string port, int baudrate = 9600);
+
     std::string getPort();
-    void start();
-    void start(char robotid, char deviceid);
-    void stop();
     char getRobotID();
-    char getDeviceID();
-    void setRobotID(char id);
-    void setDeviceID(char id);
-    bool isConnected();
 };
 
 #endif

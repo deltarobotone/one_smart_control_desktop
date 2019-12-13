@@ -13,5 +13,7 @@
         <file>logos/onesmartcontrol.png</file>
         <file>icons/oneicon.png</file>
         <file>screens/connectionfailed.png</file>
+        <file>icons/refresh.png</file>
+        <file>icons/stop.png</file>
     </qresource>
 </RCC>

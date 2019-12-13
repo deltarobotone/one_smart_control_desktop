@@ -27,9 +27,9 @@ void OneSmartControl::TimeWidget::createLayout()
 
     tLabel->setAlignment(Qt::AlignCenter);
     tLabel->setFont(font);
-    tSlider->setMaximum(1000);
-    tSlider->setMinimum(100);
-    tSlider->setValue(500);
+    tSlider->setMaximum(2500);
+    tSlider->setMinimum(500);
+    tSlider->setValue(1500);
     connect(tSlider, SIGNAL(valueChanged(int)),this, SLOT(tSliderValueChanged(int)));
     tSlider->setStyleSheet("QSlider::sub-page:Horizontal { background: rgb(180, 180, 180); }"
                            "QSlider::add-page:Horizontal { background: rgb(180, 180, 180); }"
@@ -42,9 +42,7 @@ void OneSmartControl::TimeWidget::createLayout()
 
     setLayout(basicLayout);
 
-    controlData.waitFortime  = uint(tSlider->value());
-    QString text = "Wait for " +  QString::number(tSlider->value()) + QString(" ms");
-    tLabel->setText(text);
+    tSliderValueChanged(tSlider->value());
     emit dataChanged();
 
 }
