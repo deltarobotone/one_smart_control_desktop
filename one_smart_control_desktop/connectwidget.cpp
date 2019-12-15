@@ -154,7 +154,7 @@ void OneSmartControl::ConnectWidget::handshakeFailed()
     portLabel->setText("USB-Port: -");
 
     connectionFailedImage->load(":/images/screens/connectionfailed.png");
-    connectionfailedWidget->setPixmap(QPixmap::fromImage(*connectionFailedImage));
+    connectionfailedWidget->setPixmap(QPixmap::fromImage(connectionFailedImage->scaled(350,550,Qt::KeepAspectRatio, Qt::SmoothTransformation)));
     connectionFailedLayout->addWidget(connectionfailedWidget,0,Qt::AlignCenter);
     connectionFailedDialog->setLayout(connectionFailedLayout);
     connectionFailedDialog->setFixedSize(400,600);
@@ -286,6 +286,15 @@ void OneSmartControl::ConnectWidget::scanFinished()
         statusLabel->setText("Status: no device found");
         idLabel->setText("Robot-ID: -");
         portLabel->setText("USB-Port: -");
+
+        connectionFailedImage->load(":/images/screens/connectionfailed.png");
+        connectionfailedWidget->setPixmap(QPixmap::fromImage(connectionFailedImage->scaled(350,550,Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+        connectionFailedLayout->addWidget(connectionfailedWidget,0,Qt::AlignCenter);
+        connectionFailedDialog->setLayout(connectionFailedLayout);
+        connectionFailedDialog->setFixedSize(400,600);
+        connectionFailedDialog->setWindowTitle("Information");
+        connectionFailedDialog->setWindowFlags(connectionFailedDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
+        connectionFailedDialog->show();
 
         connectButton->setEnabled(false);
         refreshButton->setEnabled(true);
