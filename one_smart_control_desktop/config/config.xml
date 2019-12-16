@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>One Smart Control Desktop</Name>
+    <Version>0.3.0</Version>
+    <Title>One Smart Control Desktop</Title>
+    <Publisher>Delta-Robot One</Publisher>
+    <StartMenuDir>One Smart Control</StartMenuDir>
+    <TargetDir>@ApplicationsDir@/One Smart Control Desktop</TargetDir>
+</Installer>
