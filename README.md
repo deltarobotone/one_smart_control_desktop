@@ -1,4 +1,4 @@
-<Img src="https://github.com/deltarobotone/image_database/blob/master/logos/logos%20(8).PNG" width=500>
+<Img src="https://github.com/deltarobotone/image_database/blob/master/logos/logos%20(8).PNG" width=350>
 
 # [**>>>Download here<<<**](https://github.com/deltarobotone/one_smart_control_desktop/archive/v0.3-install.zip)
 # One Smart Control Desktop Software  
