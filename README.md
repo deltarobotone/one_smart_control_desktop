@@ -5,17 +5,19 @@
 
 We recommend to download the official offline installer. Unzip the package and run the **OneSmartControlDesktopInstaller.exe** to install the application on your Windows 10 system (64 bit). A few steps later you can find a new entry in your start-menu. Launch the One Smart Control Desktop Application and have some fun with Delta-Robot One. We recommend a screen with a minimum of 1600x900 pixels to display the application in full size. 
 
-For more information about One Smart Control have look on the wiki page of this repository.
+The One Smart Control Application is written in C++ using the Qt-Creator IDE and Qt-Framework. Check out the development master branch of this repository and have a look at the sourcecode.
 
-[**>>>One Smart Control Wiki<<<**](https://github.com/deltarobotone/one_smart_control_desktop/wiki)
+For creating an installer the Qt Installer Framework is used. All information, config files, scripts and packages you can fin in the deploy branch. This files can be used with this framework directly.
 
-The One Smart Control Application is written in C++ using the Qt-Creator IDE and Qt-Framework. Check out the development branch of this repository and have a look at the sourcecode.
-
-[**>>>Development Branch (Master)<<<**](https://github.com/deltarobotone/one_smart_control_desktop/tree/master)
+[**>>>Deploy (Qt Installler Framework)<<<**](https://github.com/deltarobotone/one_smart_control_desktop/tree/deploy-win10)
 
 If you want to use the raw build files you can get these at the build branch.
 
 [**>>>Pre-Build (Windows 10)<<<**](https://github.com/deltarobotone/one_smart_control_desktop/tree/prebuild-win10)
+
+For more information about One Smart Control have look on the wiki page of this repository.
+
+[**>>>One Smart Control Wiki<<<**](https://github.com/deltarobotone/one_smart_control_desktop/wiki)
 
 # Overview and short introduction
 
