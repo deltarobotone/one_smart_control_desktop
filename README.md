@@ -19,6 +19,12 @@ For more information about One Smart Control have look on the wiki page of this 
 
 [**>>>One Smart Control Wiki<<<**](https://github.com/deltarobotone/one_smart_control_desktop/wiki)
 
+## NEW!!! Flowchart support
+
+[<img src="https://github.com/deltarobotone/image_database/blob/master/logos/logos%20(15).PNG" width="550">](https://raw.githubusercontent.com/deltarobotone/image_database/master/logos/logos%20(15).PNG)
+
+Flowcharts can be used to write your own robot control programs for Delta-Robot One. Flowcharts can be stored in the flowchart data format (.fc). The One Smart Control Software (actually supported on Windows 10 and Android) provides functions to use (play), create, change, save and load flowcharts. Check out One Smart Control Software on your Device ([direct download](https://github.com/deltarobotone/one_smart_control_desktop) for Windows 10 or Play Store for Android). Additionally the One Easy Protocol development packages provide some basic functions for Flowcharts (actually supported with python on Linux and Windows and c++ on Windows). Load, print and start your flowchart file you have been created with One Smart Control. Check out One Easy Protocol on your Device (pip install one-easy-protocol for python or [direct download](https://github.com/deltarobotone/one_easy_protocol) for c++). With Flowcharts you are able to use your robot on an easy way.
+
 # Overview and short introduction
 
 One Smart Control Desktop provides control functions for Delta-Robot One using One Easy Protocol. The control functions for moving, light and gripper actions are docked on the left side of this software. **Attention: If a robot is connected the commands run directly!** All commands can be stored in the implemented programming chart (flowchart) using the "to chart" button on the top right side of a control widget. The center of this application contains a visualisation of the robot workingspace. Below this workingspace widget are some buttons to etablish a connection to your Delta-Robot One. You are able to scan the COM ports of you device. All connected COM devices will be listetd after a scan is finished. Choose a port to connect a robot with the connect button. The software checks the connection with a handshake. If there is no robot on the port available an information screen pops up. On the right side of this software a flowchart represents a robot program (here prefilled). The toolbar below the chart provides add, change and delete functions. You can run, save or load a program using this toolbar.
